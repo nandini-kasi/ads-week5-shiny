@@ -227,13 +227,16 @@ server <- function(input, output, session) {
   fitted_models <- reactive({
     tr <- train_data()
     sel <- input$models_selected
+    validate(need(length(sel) >= 1, "Please select at least one model."))
 
-    model_list <- list()
-    if ("TSLM" %in% sel) model_list$TSLM <- TSLM(Sales ~ trend() + season())
-    if ("ETS" %in% sel)  model_list$ETS  <- ETS(Sales)
-    if ("ARIMA" %in% sel) model_list$ARIMA <- ARIMA(Sales)
+    m_all <- model(
+      tr,
+      TSLM  = TSLM(Sales ~ trend() + season()),
+      ETS   = ETS(Sales),
+      ARIMA = ARIMA(Sales)
+    )
 
-    do.call(model, c(list(.data = tr), model_list))
+    select(m_all, Varietal, all_of(sel))
   })
 
   # Validation forecasts (for out-of-sample scoring) and future forecasts
